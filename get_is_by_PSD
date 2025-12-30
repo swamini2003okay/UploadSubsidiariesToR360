@@ -21,10 +21,10 @@ def get_parent_id_by_psd(psd_number: str) -> str:
         
         # Query to find document with the given PSD number
         query = """
-        SELECT c.parentId 
+        SELECT c.main_parent_id 
         FROM c 
         WHERE c.dType = @d_type 
-        AND c.psdNumber = @psd_number 
+        AND c.psd_number = @psd_number 
         AND c.active = @is_active
         """
         
@@ -46,7 +46,7 @@ def get_parent_id_by_psd(psd_number: str) -> str:
             return None
             
         # Assuming the first match is what we want
-        parent_id = items[0].get('parentId')
+        parent_id = items[0].get('main_parent_id')
         
         if not parent_id:
             logger.warning(f"Document found but no parentId for PSD: {psd_number}")
