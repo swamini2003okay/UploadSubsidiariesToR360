@@ -1,6 +1,7 @@
 import os
-from app.services.cosmos import CosmosService
+import re
 from dotenv import load_dotenv
+from app.services.cosmos import CosmosService
 from loguru import logger
 
 load_dotenv()
@@ -59,6 +60,30 @@ def get_parent_id_by_psd(psd_number: str) -> str:
         logger.error(f"Error fetching parent ID for PSD {psd_number}: {str(e)}")
         raise
 
+# Need to change this function as we need to fetch the psd from s3 so need to use result from get_sheet_from_s3
+def get_psd_by_sheet(filename: str) -> str:
+    """
+    Extract the PSD number from a filename in the format:
+    'LegalEntityMapping_SFDC-PSD-{number}_{timestamp}'
+    
+    Args:
+        filename (str): The input filename (can be with or without path)
+        
+    Returns:
+        str: The PSD number in format 'SFDC-PSD-{number}'
+        
+    Raises:
+        ValueError: If the filename doesn't match the expected pattern
+    """
+    # Match the pattern: LegalEntityMapping_SFDC-PSD-{numbers}_{numbers}
+    match = re.match(r'^LegalEntityMapping_(SFDC-PSD-\d+)_\d+', filename)
+    
+    if not match:
+        raise ValueError(f"Filename '{filename}' does not match expected pattern: 'LegalEntityMapping_SFDC-PSD-{{number}}_{{timestamp}}'")
+    
+    return match.group(1)
+
+
 if __name__ == "__main__":
     # Example usage
     psd = input("Enter PSD number: ").strip()
@@ -70,3 +95,11 @@ if __name__ == "__main__":
             print("No matching record found for the given PSD number.")
     else:
         print("No PSD number provided.")
+        
+    # Example usage of get_psd_sheet
+    test_filename = "LegalEntityMapping_SFDC-PSD-076858_1767096012389.csv"
+    try:
+        psd_number = get_psd_by_sheet(test_filename)
+        print(f"\nExtracted PSD number from '{test_filename}': {psd_number}")
+    except ValueError as e:
+        print(f"\nError: {str(e)}")
